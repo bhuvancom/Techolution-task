@@ -1,9 +1,11 @@
 package com.techno.demo.config;
 
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -16,9 +18,12 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableMethodSecurity
-@EnableWebSecurity
 public class SecurityConfiguration {
     private UserDetailsService userDetailsService;
+
+    public SecurityConfiguration(UserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -34,12 +39,11 @@ public class SecurityConfiguration {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/api/user/**").permitAll()
-                        .requestMatchers("/public/**").hasAnyRole("ROLE_USER", "ROLE_ADMIN")
-                        .requestMatchers("/private/**").hasRole("ROLE_ADMIN")
-                        .anyRequest().authenticated()).httpBasic(httpSecurityHttpBasicConfigurer -> {
-                          
-                });
+                        .requestMatchers("/public/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/private/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()).httpBasic(Customizer.withDefaults());
 
         return http.build();
     }

@@ -19,11 +19,11 @@ public class DemoApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        var userRole = new Role();
-        userRole.setName("USER");
-        roleRepository.save(userRole);
-        var adminRole = new Role();
-        adminRole.setName("ADMIN");
-        roleRepository.save(adminRole);
+//        var userRole = new Role();
+//        userRole.setName("USER");
+//        roleRepository.save(userRole);
+//        var adminRole = new Role();
+//        adminRole.setName("ADMIN");
+//        roleRepository.save(adminRole);
     }
 }

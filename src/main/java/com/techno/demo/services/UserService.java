@@ -42,18 +42,21 @@ public class UserService {
             roleRepository.findByName(roleName).ifPresent(roles::add);
         });
         if (roles.isEmpty()) {
-            roleRepository.findByName("user").ifPresent(roles::add);
+            roleRepository.findByName("USER").ifPresent(roles::add);
         }
         user.setRoles(roles);
         return userRepository.save(user);
     }
 
-    public void deleteUser(User user) {
+    public void deleteUser(Integer id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User with id -> " + id + " was not found"));
         userRepository.delete(user);
     }
 
-    public Optional<User> getUserById(Integer id) {
-        return userRepository.findById(id);
+    public User getUserById(Integer id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User with id -> " + id + " was not found"));
+        user.getRoles();
+        return user;
     }
 
     public Optional<User> getUserByUsername(String username) {
