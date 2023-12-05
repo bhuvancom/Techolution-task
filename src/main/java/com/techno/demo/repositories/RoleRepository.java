@@ -1,6 +1,6 @@
 package com.techno.demo.repositories;
 
-import com.techno.demo.model.Role;
+import com.techno.demo.model.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

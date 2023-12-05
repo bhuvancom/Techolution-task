@@ -1,9 +1,8 @@
 package com.techno.demo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.techno.demo.model.Role;
-import com.techno.demo.model.User;
-import com.techno.demo.model.request.NamesDTO;
+import com.techno.demo.model.entity.Role;
+import com.techno.demo.model.entity.User;
 import com.techno.demo.model.request.UserCreateDto;
 import com.techno.demo.services.UserService;
 import org.junit.jupiter.api.Test;
@@ -20,7 +19,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -53,47 +51,36 @@ class DemoApplicationTests {
     @Test
     @WithMockUser(roles = "USER")
     public void testUserEndpointForPublicEndpoint() throws Exception {
-        mockMvc.perform(get("/public"))
+        var user = new User(1, "Akash", "1234", "akash",
+                Set.of(new Role(1L, "USER")));
+        when(userServiceMock.getUserById(anyInt())).thenReturn(user);
+        mockMvc.perform(get("/api/user/findById/{id}",1))
                 .andExpect(status().isOk());
+    }
+
+
+    @Test
+    @WithMockUser(roles = "USER")
+    public void testUserEndpointForPrivateEndpoint() throws Exception {
+        var user = new UserCreateDto(1, "Akash", "1234", "akash",
+                java.util.List.of("Admin"));
+        var data = objectMapper.writeValueAsString(user);
+        mockMvc.perform(post("/api/user/create").content(data).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    public void testAdminEndpointForPublicEndpoint() throws Exception {
-        mockMvc.perform(get("/public"))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    public void testAdminEndpointForPrivateEndpoint() throws Exception {
-        var namesDto = new NamesDTO(Arrays.asList("Test", "Names"));
-        var data = objectMapper.writeValueAsString(namesDto);
-        mockMvc.perform(post("/private")
-                        .content(data).contentType(MediaType.APPLICATION_JSON))
+    public void testUserDataSave() throws Exception {
+        var user = new UserCreateDto(1, "Akash", "1234", "akash",
+                java.util.List.of("Admin"));
+        var data = objectMapper.writeValueAsString(user);
+        mockMvc.perform(post("/api/user/create").content(data).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
     }
 
     @Test
     @WithMockUser(roles = "USER")
-    public void testUserEndpointForPrivateEndpoint() throws Exception {
-        var namesDto = new NamesDTO(Arrays.asList("Test", "Names"));
-        var data = objectMapper.writeValueAsString(namesDto);
-        mockMvc.perform(post("/private")
-                        .content(data).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    public void testUserDataSave() throws Exception {
-        var user = new UserCreateDto(1, "Akash", "1234", "akash",
-                java.util.List.of("Admin"));
-        var data = objectMapper.writeValueAsString(user);
-        mockMvc.perform(post("/api/user").content(data).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
-    }
-
-    @Test
     public void testUserDataFetch() throws Exception {
         var user = new User(1, "Akash", "1234", "akash",
                 Set.of(new Role(1L, "Admin")));
@@ -104,7 +91,19 @@ class DemoApplicationTests {
     }
 
     @Test
-    public void testUserDataFetchByUserName() throws Exception {
+    @WithMockUser(roles = "ADMIN")
+    public void testUserDataFetchForAdmin() throws Exception {
+        var user = new User(1, "Akash", "1234", "akash",
+                Set.of(new Role(1L, "Admin")));
+        when(userServiceMock.getUserById(anyInt())).thenReturn(user);
+        var data = objectMapper.writeValueAsString(user);
+        mockMvc.perform(get("/api/user/findById/{id}", 1L))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void testUserDataFetchByUserNameForAdmin() throws Exception {
         var user = new User(1, "Akash", "1234", "akash",
                 Set.of(new Role(1L, "Admin")));
         when(userServiceMock.getUserByUsername(anyString())).thenReturn(Optional.of(user));
@@ -114,6 +113,28 @@ class DemoApplicationTests {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
+    public void testUserDataFetchByUserNameForUser() throws Exception {
+        var user = new User(1, "Akash", "1234", "akash",
+                Set.of(new Role(1L, "Admin")));
+        when(userServiceMock.getUserByUsername(anyString())).thenReturn(Optional.of(user));
+        var data = objectMapper.writeValueAsString(user);
+        mockMvc.perform(get("/api/user/findByUsername/{username}", user.getUsername()))
+                .andExpect(status().isOk()).andExpect(content().json(data));
+    }
+
+    @Test
+    public void testUserDataFetchByUserNameForNoRoleUnAuthorized() throws Exception {
+        var user = new User(1, "Akash", "1234", "akash",
+                Set.of(new Role(1L, "Admin")));
+        when(userServiceMock.getUserByUsername(anyString())).thenReturn(Optional.of(user));
+        var data = objectMapper.writeValueAsString(user);
+        mockMvc.perform(get("/api/user/findByUsername/{username}", user.getUsername()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
     public void testUserDataFetchByUserNameNotFound() throws Exception {
         var user = new User(1, "Akash", "1234", "akash",
                 Set.of(new Role(1L, "Admin")));
@@ -124,6 +145,18 @@ class DemoApplicationTests {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
+    public void testUserDataFetchByUserNameNotFoundForAdmin() throws Exception {
+        var user = new User(1, "Akash", "1234", "akash",
+                Set.of(new Role(1L, "Admin")));
+        when(userServiceMock.getUserByUsername(user.getUsername())).thenReturn(Optional.of(user));
+        var data = objectMapper.writeValueAsString(user);
+        mockMvc.perform(get("/api/user/findByUsername/{username}", "someUser"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
     public void testUserDataModify() throws Exception {
         var user = new User(1, "Akash", "1234", "akash",
                 Set.of(new Role(1L, "Admin")));
@@ -133,12 +166,29 @@ class DemoApplicationTests {
         User updatedUser = userServiceActual.getUserById(1);
         var data = objectMapper.writeValueAsString(userDto);
         var actualData = objectMapper.writeValueAsString(updatedUser);
-        mockMvc.perform(put("/api/user/{id}", 1L)
+        mockMvc.perform(put("/api/user/update/{id}", 1L)
                         .content(data).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
 
     @Test
+    @WithMockUser(roles = "USER")
+    public void testUserDataModifyForUser() throws Exception {
+        var user = new User(1, "Akash", "1234", "akash",
+                Set.of(new Role(1L, "Admin")));
+        var u = userServiceActual.saveUser(user, user.getRoles().stream().map(Role::getName).toList());
+        var userDto = new UserCreateDto(1, "Akash1", "1234", "akash",
+                List.of("Admin"));
+        User updatedUser = userServiceActual.getUserById(1);
+        var data = objectMapper.writeValueAsString(userDto);
+        var actualData = objectMapper.writeValueAsString(updatedUser);
+        mockMvc.perform(put("/api/user/update/{id}", 1L)
+                        .content(data).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = {"USER", "ADMIN"})
     public void testUserDataFetchAndNotFound() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = get("/api/user/findById/{id}", 200L);
         ResultActions perform = mockMvc.perform(mockHttpServletRequestBuilder);
@@ -147,12 +197,23 @@ class DemoApplicationTests {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     public void testUserDelete() throws Exception {
         var user = new User(1, "Akash", "1234", "akash",
                 Set.of(new Role(1L, "Admin")));
         userServiceActual.saveUser(user, user.getRoles().stream().map(Role::getName).toList());
-        mockMvc.perform(delete("/api/user/{id}", 1L))
+        mockMvc.perform(delete("/api/user/delete/{id}", 1L))
                 .andExpect(status().isOk()).andExpect(content().string("Deleted"));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    public void testUserDeleteForUser() throws Exception {
+        var user = new User(1, "Akash", "1234", "akash",
+                Set.of(new Role(1L, "Admin")));
+        userServiceActual.saveUser(user, user.getRoles().stream().map(Role::getName).toList());
+        mockMvc.perform(delete("/api/user/delete/{id}", 1L))
+                .andExpect(status().isForbidden());
     }
 
 }

@@ -40,9 +40,6 @@ public class SecurityConfiguration {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/api/user/**").permitAll()
-                        .requestMatchers("/public/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/private/**").hasRole("ADMIN")
                         .anyRequest().authenticated()).httpBasic(Customizer.withDefaults());
 
         return http.build();

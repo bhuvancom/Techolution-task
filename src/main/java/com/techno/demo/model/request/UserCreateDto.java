@@ -1,6 +1,6 @@
 package com.techno.demo.model.request;
 
-import com.techno.demo.model.User;
+import com.techno.demo.model.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

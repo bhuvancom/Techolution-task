@@ -1,8 +1,6 @@
 package com.techno.demo.services;
 
-import com.techno.demo.exception.ResourceNotFoundException;
-import com.techno.demo.model.Role;
-import com.techno.demo.model.User;
+import com.techno.demo.model.entity.User;
 import com.techno.demo.repositories.UserRepository;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -11,9 +9,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 

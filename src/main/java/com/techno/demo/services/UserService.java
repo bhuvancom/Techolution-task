@@ -1,12 +1,14 @@
 package com.techno.demo.services;
 
 import com.techno.demo.exception.ResourceNotFoundException;
-import com.techno.demo.model.Role;
-import com.techno.demo.model.User;
+import com.techno.demo.model.entity.Role;
+import com.techno.demo.model.entity.User;
 import com.techno.demo.model.request.UserCreateDto;
 import com.techno.demo.repositories.RoleRepository;
 import com.techno.demo.repositories.UserRepository;
 import lombok.extern.java.Log;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -18,6 +20,8 @@ import java.util.Set;
 @Log
 public class UserService {
     final private UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository, RoleRepository roleRepository) {
         this.userRepository = userRepository;
@@ -38,6 +42,7 @@ public class UserService {
 
     public User saveUser(User user, List<String> roleNames) {
         Set<Role> roles = new HashSet<>();
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         roleNames.forEach(roleName -> {
             roleRepository.findByName(roleName).ifPresent(roles::add);
         });
