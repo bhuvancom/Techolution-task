@@ -1,5 +1,12 @@
 server:
   port: 8001
+logging:
+  level:
+    root: INFO
+    web: INFO
+    sql: INFO
+    com.techno.demo: DEBUG
+    org.springframework: DEBUG
 spring:
   application:
     name: techolution-poc

@@ -6,8 +6,7 @@ import com.techno.demo.model.entity.User;
 import com.techno.demo.model.request.UserCreateDto;
 import com.techno.demo.repositories.RoleRepository;
 import com.techno.demo.repositories.UserRepository;
-import lombok.extern.java.Log;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,21 +16,22 @@ import java.util.Optional;
 import java.util.Set;
 
 @Service
-@Log
+@Slf4j
 public class UserService {
     final private UserRepository userRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository) {
+    private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
     }
 
-    private final RoleRepository roleRepository;
-
     public User updateUser(Integer id, UserCreateDto dto) {
         if (id == null || dto.getId() == null || id.intValue() != dto.getId().intValue()) {
+            log.error("incoming user id was having issue {}", dto);
             throw new IllegalArgumentException("Missing or invalid userId");
         }
 
@@ -41,12 +41,14 @@ public class UserService {
     }
 
     public User saveUser(User user, List<String> roleNames) {
+        log.debug("inside save user");
         Set<Role> roles = new HashSet<>();
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         roleNames.forEach(roleName -> {
             roleRepository.findByName(roleName).ifPresent(roles::add);
         });
         if (roles.isEmpty()) {
+            log.debug("Roles are sent in request adding default one to user {}", user.getUsername());
             roleRepository.findByName("USER").ifPresent(roles::add);
         }
         user.setRoles(roles);
@@ -54,17 +56,20 @@ public class UserService {
     }
 
     public void deleteUser(Integer id) {
+        log.debug("Going to delete user by id {}", id);
         User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User with id -> " + id + " was not found"));
         userRepository.delete(user);
     }
 
     public User getUserById(Integer id) {
+        log.debug("Going to fetch user by id {}", id);
         User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User with id -> " + id + " was not found"));
         user.getRoles();
         return user;
     }
 
     public Optional<User> getUserByUsername(String username) {
+        log.debug("Going to get user by user name {}", username);
         return userRepository.findByUsername(username);
     }
 
