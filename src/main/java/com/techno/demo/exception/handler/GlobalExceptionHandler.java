@@ -1,5 +1,6 @@
 package com.techno.demo.exception.handler;
 
+import com.techno.demo.exception.BadRequestException;
 import com.techno.demo.exception.ResourceNotFoundException;
 import com.techno.demo.exception.model.ErrorDetails;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         exception.printStackTrace();
         log.error("Error access was denied {}", errorDetails);
         return new ResponseEntity<>(errorDetails, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorDetails> handleBadRequest(BadRequestException exception, WebRequest webRequest) {
+        ErrorDetails errorDetails = new ErrorDetails(new Date(), exception.getMessage(), webRequest.getDescription(false));
+        log.error("Error Bad request {}", errorDetails);
+        return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)

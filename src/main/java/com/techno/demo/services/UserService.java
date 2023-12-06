@@ -1,11 +1,13 @@
 package com.techno.demo.services;
 
+import com.techno.demo.exception.BadRequestException;
 import com.techno.demo.exception.ResourceNotFoundException;
 import com.techno.demo.model.entity.Role;
 import com.techno.demo.model.entity.User;
 import com.techno.demo.model.request.UserCreateDto;
 import com.techno.demo.repositories.RoleRepository;
 import com.techno.demo.repositories.UserRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,22 +19,18 @@ import java.util.Set;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserService {
     final private UserRepository userRepository;
 
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.roleRepository = roleRepository;
-    }
 
     public User updateUser(Integer id, UserCreateDto dto) {
         if (id == null || dto.getId() == null || id.intValue() != dto.getId().intValue()) {
             log.error("incoming user id was having issue {}", dto);
-            throw new IllegalArgumentException("Missing or invalid userId");
+            throw new BadRequestException("Missing or invalid userId");
         }
 
         return userRepository.findById(dto.getId()).map(u -> saveUser(dto.toUser(), dto.getRoles())).orElseThrow(() ->

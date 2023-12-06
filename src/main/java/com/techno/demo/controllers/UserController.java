@@ -4,22 +4,21 @@ import com.techno.demo.exception.ResourceNotFoundException;
 import com.techno.demo.model.entity.User;
 import com.techno.demo.model.request.UserCreateDto;
 import com.techno.demo.services.UserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.net.URI;
 
 @RestController
 @Slf4j
+@RequiredArgsConstructor
 @RequestMapping("/api/user")
 public class UserController {
     private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
 
     @GetMapping("findById/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
@@ -48,7 +47,7 @@ public class UserController {
 
     @PutMapping("/update/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<User> updateUser(@RequestBody UserCreateDto user, @PathVariable("id") Integer id) {
+    public ResponseEntity<User> updateUser(@RequestBody UserCreateDto user, @PathVariable("id") Integer id) throws HttpClientErrorException.BadRequest {
         log.info("Inside update user, for user id {}", id);
         return ResponseEntity.ok(userService.updateUser(id, user));
     }
